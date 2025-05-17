@@ -1,0 +1,73 @@
+function createScriptRunnerUI() {
+    var scriptRunnerPanel = new Window("palette", "Script Runner", undefined, {resizeable: true});
+
+    // Add a multiline input field
+    scriptRunnerPanel.grp = scriptRunnerPanel.add("group");
+    scriptRunnerPanel.grp.orientation = "column";
+    scriptRunnerPanel.grp.alignment = "fill";
+    scriptRunnerPanel.grp.alignChildren = ["fill", "top"];
+
+    scriptRunnerPanel.grp.scriptInput = scriptRunnerPanel.grp.add("edittext", undefined, "", {
+        multiline: true,
+        scrolling: true
+    });
+
+    // Add buttons
+    scriptRunnerPanel.grp.buttonGroup = scriptRunnerPanel.grp.add("group");
+    scriptRunnerPanel.grp.buttonGroup.orientation = "row";
+    scriptRunnerPanel.grp.buttonGroup.alignChildren = ["center", "center"];
+
+    scriptRunnerPanel.grp.runBtn = scriptRunnerPanel.grp.buttonGroup.add("button", undefined, "Run");
+    scriptRunnerPanel.grp.clearBtn = scriptRunnerPanel.grp.buttonGroup.add("button", undefined, "Clear");
+    scriptRunnerPanel.grp.pasteRunBtn = scriptRunnerPanel.grp.buttonGroup.add("button", undefined, "Paste & Run");
+
+    // Button event listeners
+    scriptRunnerPanel.grp.runBtn.onClick = function () {
+        try {
+            eval(scriptRunnerPanel.grp.scriptInput.text);
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    };
+
+    scriptRunnerPanel.grp.clearBtn.onClick = function () {
+        scriptRunnerPanel.grp.scriptInput.text = '';
+    };
+
+    scriptRunnerPanel.grp.pasteRunBtn.onClick = function () {
+        scriptRunnerPanel.grp.scriptInput.text = '';
+
+        var tempFile = new File(Folder.temp.fullName + "/temp_clipboard.txt");
+        tempFile.open("w");
+        tempFile.close();
+
+        if (tempFile.execute()) {
+            tempFile.open("r");
+            var clipboardText = tempFile.read();
+            tempFile.close();
+            scriptRunnerPanel.grp.scriptInput.text = clipboardText;
+
+            try {
+                eval(clipboardText);
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        } else {
+            alert("Unable to access clipboard.");
+        }
+    };
+
+    // Make the panel resizeable
+    scriptRunnerPanel.layout.layout(true);
+    scriptRunnerPanel.grp.scriptInput.minimumSize.height = 200;
+    scriptRunnerPanel.layout.resize();
+
+    scriptRunnerPanel.onResizing = scriptRunnerPanel.onResize = function () {
+        this.layout.resize();
+    };
+
+    return scriptRunnerPanel;
+}
+
+var scriptRunnerUI = createScriptRunnerUI();
+scriptRunnerUI.show();
